@@ -1,6 +1,9 @@
 package triangleTube
 
-import "fmt"
+import (
+	"encoding/binary"
+	"fmt"
+)
 
 type TriangleTube struct {
 	// Modbus
@@ -34,40 +37,52 @@ func NewBoiler(ID int) (b *TriangleTube) {
 	return
 }
 
-func (b *TriangleTube) ProcessCommand(c []byte) (r int16, err error) {
+func (b *TriangleTube) ProcessCommand(c []byte) (r []byte, err error) {
 
+	// validate command input
 	if len(c) < 3 {
-		return 0, fmt.Errorf("malformed command")
+		return nil, fmt.Errorf("malformed command")
 	}
 
 	command := c[0]
-	switch command {
-	case readInputRegisters:
-
-	case readHoldingRegisters:
-	default:
-		return 0, fmt.Errorf("command not supported")
+	registers := c[1:]
+	// if there are an odd number of byte, throw error
+	if len(registers)%2 != 0 {
+		return nil, fmt.Errorf("incorrect register request")
 	}
+	var registerValue []byte
+	for i := 0; i < len(registers)/2; i += 2 {
+		reg := registers[i : i+2]
+		// Process command
+		switch command {
+		case readInputRegisters:
+			registerValue, err = b.readInputRegister(reg)
 
+		case readHoldingRegisters:
+
+		default:
+			return nil, fmt.Errorf("command value not supported")
+		}
+	}
 	return
 
 }
 
-func (b *TriangleTube) readInputRegister(r int) (v int16, err error) {
+func (b *TriangleTube) readInputRegister(r []byte) (v int16, err error) {
 	switch r {
 	case boilerSupplyTemp:
-		return int16(b.getBoilerSupplyTemp()), nil
+		return b.getBoilerSupplyTemp(), nil
 	case boilerReturnTemp:
-		return int16(b.getBoilerReturnTemp()), nil
+		return b.getBoilerReturnTemp(), nil
 	case outdoorTemp:
-		return int16(b.getOutdoorTemp()), nil
+		return b.getOutdoorTemp(), nil
 	default:
-		err = fmt.Errorf("command not supported")
+		err = fmt.Errorf("register value not available")
 		return 0, err
 	}
 }
 
-func (b *TriangleTube) getBoilerSupplyTemp() uint16 {
+func (b *TriangleTube) getBoilerSupplyTemp() []byte {
 	return b.BoilerSupplyTemp
 }
 
@@ -77,4 +92,12 @@ func (b *TriangleTube) getBoilerReturnTemp() uint16 {
 
 func (b *TriangleTube) getOutdoorTemp() uint16 {
 	return b.BoilerSupplyTemp
+}
+
+func makeBytes(u uint16) b []byte {
+	return binary.LittleEndian.PutUint16(b, uint16(u))
+}
+
+func makeUint(uint16) []byte {
+
 }
