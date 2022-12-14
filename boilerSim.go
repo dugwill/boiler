@@ -6,15 +6,15 @@ import (
 	"log"
 
 	"github.com/dugwill/modbus"
-	"github.com/dugwill/triangleTube"
 )
 
 func main() {
 
-	port := `/dev/ttyUSB1`
+	//port := `/dev/ttyUSB1`
+	port := `com6`
 	recChan := make(chan []byte)
 
-	t := triangleTube.NewBoiler(1)
+	//t := triangleTube.NewBoiler(1)
 
 	var rtu modbus.Connection = &modbus.RTU{SerialDevice: port, BaudRate: 38400, StopBits: 1}
 
